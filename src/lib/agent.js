@@ -15,6 +15,7 @@ PROCESS:
    - Use <script> tags for JavaScript logic.
    - Use font-awesome for icons (CDN: https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css).
    - Use Google Fonts.
+   - **IMAGES**: Do NOT use placeholder images or guess URLs. ASK the user to provide links to specific images they want to use. You can offer a "Use Demo Images" option if they don't have any (using high-quality Unsplash source URLs), but prioritize asking.
    - Wrap the code in <<<CODE_START>>> and <<<CODE_END>>>.
 
 OUTPUT FORMATS:
