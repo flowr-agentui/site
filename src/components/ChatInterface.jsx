@@ -1,8 +1,18 @@
 import { useRef, useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Send, Loader2 } from 'lucide-react';
-import { sendMessageToAgent } from '../lib/agent';
+import { streamMessageToAgent } from '../lib/agent';
 import './ChatInterface.css';
+
+const OptionButton = ({ label, onClick, disabled }) => (
+    <button
+        className="option-button"
+        onClick={onClick}
+        disabled={disabled}
+    >
+        {label}
+    </button>
+);
 
 export function ChatInterface({ apiKey, messages, setMessages, setHtmlContent, isTyping, setIsTyping }) {
     const [input, setInput] = useState('');
@@ -16,27 +26,110 @@ export function ChatInterface({ apiKey, messages, setMessages, setHtmlContent, i
         scrollToBottom();
     }, [messages, isTyping]);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (!input.trim() || isTyping) return;
+    const handleOptionClick = (optionValue) => {
+        if (isTyping) return;
+        handleSendMessage(optionValue);
+    };
 
-        const userMsg = { role: 'user', content: input };
+    const handleSendMessage = async (text) => {
+        if (!text.trim() || isTyping) return;
+
+        const userMsg = { role: 'user', content: text };
         const updatedMessages = [...messages, userMsg];
 
         setMessages(updatedMessages);
         setInput('');
         setIsTyping(true);
 
-        const result = await sendMessageToAgent(apiKey, updatedMessages);
+        // Add placeholder for assistant message
+        setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
-        const botMsg = { role: 'assistant', content: result.content };
-        setMessages(prev => [...prev, botMsg]);
+        let fullContent = '';
 
-        if (result.code) {
-            setHtmlContent(result.code);
+        try {
+            const stream = streamMessageToAgent(apiKey, updatedMessages);
+
+            for await (const chunk of stream) {
+                fullContent += chunk;
+
+                // Real-time code extraction
+                const codeStart = fullContent.indexOf("<<<CODE_START>>>");
+                const codeEnd = fullContent.indexOf("<<<CODE_END>>>");
+
+                if (codeStart !== -1 && codeEnd !== -1) {
+                    const code = fullContent.substring(codeStart + 16, codeEnd).trim();
+                    setHtmlContent(code);
+                }
+
+                setMessages(prev => {
+                    const newMsgs = [...prev];
+                    newMsgs[newMsgs.length - 1] = {
+                        role: 'assistant',
+                        content: fullContent
+                    };
+                    return newMsgs;
+                });
+            }
+        } catch (err) {
+            console.error("Stream error:", err);
+            setMessages(prev => [...prev, { role: 'assistant', content: "Error: Could not connect to agent." }]);
+        } finally {
+            setIsTyping(false);
+        }
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        handleSendMessage(input);
+    };
+
+    // Helper to render message content with hidden code blocks and visible options
+    const renderMessageContent = (content) => {
+        // 1. Hide Code Blocks for display
+        let displayContent = content;
+        const codeStart = content.indexOf("<<<CODE_START>>>");
+        const codeEnd = content.indexOf("<<<CODE_END>>>");
+
+        if (codeStart !== -1 && codeEnd !== -1) {
+            displayContent = content.substring(0, codeStart) + "\n\n*(Updating Preview...)*\n" + content.substring(codeEnd + 14);
+        } else if (codeStart !== -1) {
+            // Code is streaming in...
+            displayContent = content.substring(0, codeStart) + "\n\n*(Generating Code...)*";
         }
 
-        setIsTyping(false);
+        // 2. Extract Options
+        let options = [];
+        const optStart = displayContent.indexOf("<<<OPTIONS_START>>>");
+        const optEnd = displayContent.indexOf("<<<OPTIONS_END>>>");
+
+        if (optStart !== -1 && optEnd !== -1) {
+            try {
+                const jsonStr = displayContent.substring(optStart + 19, optEnd);
+                options = JSON.parse(jsonStr);
+                // Remove the options block from the text shown above headers
+                displayContent = displayContent.substring(0, optStart) + displayContent.substring(optEnd + 15);
+            } catch (e) {
+                console.error("Failed to parse options JSON", e);
+            }
+        }
+
+        return (
+            <div className="message-content-wrapper">
+                <ReactMarkdown>{displayContent}</ReactMarkdown>
+                {options.length > 0 && (
+                    <div className="options-container">
+                        {options.map((opt, i) => (
+                            <OptionButton
+                                key={i}
+                                label={opt.label}
+                                onClick={() => handleOptionClick(opt.value || opt.label)}
+                                disabled={isTyping}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
     };
 
     return (
@@ -45,15 +138,15 @@ export function ChatInterface({ apiKey, messages, setMessages, setHtmlContent, i
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`message ${msg.role}`}>
                         <div className="message-content">
-                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                            {msg.role === 'assistant' ? renderMessageContent(msg.content) : <ReactMarkdown>{msg.content}</ReactMarkdown>}
                         </div>
                     </div>
                 ))}
-                {isTyping && (
+                {isTyping && messages[messages.length - 1]?.role !== 'assistant' && (
                     <div className="message assistant">
                         <div className="message-content typing-indicator">
                             <Loader2 className="spinner" size={16} />
-                            Thinking...
+                            <span>Thinking...</span>
                         </div>
                     </div>
                 )}

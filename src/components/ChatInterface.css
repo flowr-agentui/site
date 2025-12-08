@@ -121,3 +121,36 @@
         transform: rotate(360deg);
     }
 }
+
+/* Options Styles */
+.options-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.option-button {
+    background: var(--bg-secondary);
+    border: 1px solid var(--accent);
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 1rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.option-button:hover:not(:disabled) {
+    background: var(--accent);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.option-button:disabled {
+    opacity: 0.5;
+    cursor: default;
+    border-color: var(--border);
+}

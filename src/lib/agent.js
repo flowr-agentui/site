@@ -2,39 +2,54 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HumanMessage, AIMessage, SystemMessage } from "@langchain/core/messages";
 
 const SYSTEM_PROMPT = `You are a world-class web designer and developer assistant called Flowr.
-Your goal is to create a SINGLE file production-ready website for the user based on their requirements.
+Your goal is to collaborate with the user to build a premium, SINGLE file production-ready website.
 
-CRITICAL INSTRUCTION: FORCE A BUILDING SESSION.
-If the user mentions a type of website (e.g., "pizza site", "portfolio", "landing page"), you MUST GENERATE THE COMPLETE CODE IMMEDIATELY.
-Do NOT ask questions about design or features. Make your best professional decisions for a premium result.
-Only ask questions if the user's request is completely empty or unintelligible.
+PROCESS:
+1. **Gather Information**: deeply understand what the user wants. Do not just guess.
+2. **Interactive Clarification**: If the request is vague (e.g., "make a website"), query the user for their preference by providing SPECIFIC OPTIONS.
+   - You can offer choices for: Style (Modern vs Classic), Industry (Restaurant vs Tech), Color Scheme, etc.
+   - Use the special OPTIONS format to present these choices.
+3. **Generate**: When you have sufficient details, OR if the user explicitly asks to build/generate, OR if the user selects a "Generate Site" option you provided:
+   - Create a SINGLE HTML file containing everything.
+   - Use <style> tags for modern CSS (Flexbox, Grid, Variables).
+   - Use <script> tags for JavaScript logic.
+   - Use font-awesome for icons (CDN: https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css).
+   - Use Google Fonts.
+   - Wrap the code in <<<CODE_START>>> and <<<CODE_END>>>.
 
-When generating code:
-- Create a SINGLE HTML file containing everything.
-- Use <style> tags for CSS. Use modern CSS (Flexbox, Grid, Variables). Make it beautiful.
-- Use <script> tags for JavaScript.
-- Use font-awesome for icons if needed (CDN: https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css).
-- Use Google Fonts (Inter, Roboto, etc.).
-- Ensure the design is responsive and looks premium.
-- WRAP THE CODE IN SPECIAL MARKERS: 
-  <<<CODE_START>>>
-  <!DOCTYPE html>...
-  <<<CODE_END>>>
+OUTPUT FORMATS:
 
-If the user asks to change something after the code is generated, regenerate the whole file with changes and wrap it in the markers again.
+A) To ask the user to choose from options (Use this often for clarification):
+Explain the choice briefly, then:
+<<<OPTIONS_START>>>
+[
+  {"id": "1", "label": "Option Label", "value": "Description of choice"},
+  {"id": "2", "label": "Another Option", "value": "Description"}
+]
+<<<OPTIONS_END>>>
+
+B) To indicate readiness to build (if you have enough info but likely want confirmation):
+Include a "Generate Site" option in your list.
+
+C) To Generate the Site:
+<<<CODE_START>>>
+<!DOCTYPE html>...
+<<<CODE_END>>>
+
+Be charming, professional, and focus on high-quality design.
 `;
 
-export async function sendMessageToAgent(apiKey, messages, userMessageContent) {
+export async function* streamMessageToAgent(apiKey, messages) {
     try {
         if (!apiKey || typeof apiKey !== 'string') {
-            throw new Error(`Invalid API Key provided: ${typeof apiKey}`);
+            throw new Error(`Invalid API Key provided`);
         }
-        console.log("Initializing Agent with Key length:", apiKey.length);
 
         const model = new ChatGoogleGenerativeAI({
-            model: "gemini-2.5-pro",
+            model: "gemini-2.0-flash-exp", // Updated to a faster/newer model if available or stick to compatible one
             apiKey: apiKey,
             temperature: 0.7,
+            streaming: true,
         });
 
         const chatHistory = messages.map(m => {
@@ -43,50 +58,19 @@ export async function sendMessageToAgent(apiKey, messages, userMessageContent) {
             return new SystemMessage(m.content);
         });
 
-        // Add current user message
-        // Note: In the React app, we usually add the user message to state first, code passes 'messages' including the new one?
-        // Let's assume 'messages' passed here DOES NOT include the latest user message yet, or we handle it carefully.
-        // Actually, usually we append the new message to history.
-
-        // Let's assume the caller appends the user message to the UI state, and passes the WHOLE history including the new user message to this function.
-        // If the last message in 'messages' is the user's new message, we just use 'messages'.
-
-        // However, to be safe, I'll rely on the caller to pass the full conversation history including the latest user prompt.
-        // But wait, the System Prompt should be at the start.
-
         const context = [
             new SystemMessage(SYSTEM_PROMPT),
             ...chatHistory
         ];
 
-        const response = await model.invoke(context);
-        const content = typeof response.content === 'string' ? response.content : "";
+        const stream = await model.stream(context);
 
-        let code = null;
-        let textResponse = content;
-
-        // Extract code if present
-        const codeStart = content.indexOf("<<<CODE_START>>>");
-        const codeEnd = content.indexOf("<<<CODE_END>>>");
-
-        if (codeStart !== -1 && codeEnd !== -1) {
-            code = content.substring(codeStart + 16, codeEnd).trim();
-            // Remove the code block from the text response shown to user, or keep it?
-            // Usually users want to see "Here is your site..." but not the raw HTML blob.
-            // let's strip the code block for the chat bubble.
-            textResponse = content.substring(0, codeStart) + "\n\n(Website generated and updated in preview)" + content.substring(codeEnd + 14);
+        for await (const chunk of stream) {
+            yield chunk.content;
         }
-
-        return {
-            content: textResponse,
-            code: code
-        };
 
     } catch (error) {
         console.error("Agent Error:", error);
-        return {
-            content: `Error: ${error.message || "Unknown error"}. Please check your API key.`,
-            code: null
-        };
+        yield `Error: ${error.message || "Unknown error"}. Please check your API key.`;
     }
 }
