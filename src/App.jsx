@@ -7,6 +7,7 @@ import './App.css';
 function App() {
   const [apiKey, setApiKey] = useState(localStorage.getItem('gemini_api_key') || '');
   const [htmlContent, setHtmlContent] = useState('');
+  const [selectedElement, setSelectedElement] = useState(null);
   const [messages, setMessages] = useState([
     { role: 'assistant', content: 'Hello! I\'m your AI website builder. I can help you create a stunning website. To get started, tell me what kind of website you want to build?' }
   ]);
@@ -84,10 +85,15 @@ function App() {
             setHtmlContent={setHtmlContent}
             isTyping={isTyping}
             setIsTyping={setIsTyping}
+            selectedElement={selectedElement}
+            setSelectedElement={setSelectedElement}
           />
         </section>
         <section className="preview-section">
-          <PreviewFrame htmlContent={htmlContent} />
+          <PreviewFrame
+            htmlContent={htmlContent}
+            onElementSelect={setSelectedElement}
+          />
         </section>
       </main>
     </div>

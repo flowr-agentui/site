@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, X } from 'lucide-react';
 import { streamMessageToAgent } from '../lib/agent';
 import './ChatInterface.css';
 
@@ -14,7 +14,7 @@ const OptionButton = ({ label, onClick, disabled }) => (
     </button>
 );
 
-export function ChatInterface({ apiKey, messages, setMessages, setHtmlContent, isTyping, setIsTyping }) {
+export function ChatInterface({ apiKey, messages, setMessages, setHtmlContent, isTyping, setIsTyping, selectedElement, setSelectedElement }) {
     const [input, setInput] = useState('');
     const messagesEndRef = useRef(null);
 
@@ -34,7 +34,14 @@ export function ChatInterface({ apiKey, messages, setMessages, setHtmlContent, i
     const handleSendMessage = async (text) => {
         if (!text.trim() || isTyping) return;
 
-        const userMsg = { role: 'user', content: text };
+        let contentToSend = text;
+        if (selectedElement) {
+            contentToSend += `\n\n[CONTEXT] User selected element: ${selectedElement.tagName}${selectedElement.id}${selectedElement.className} (Text: "${selectedElement.text}")\nHTML Snippet: \`${selectedElement.outerHTML}\`\n[/CONTEXT]`;
+            // Clear selection after sending
+            setSelectedElement(null);
+        }
+
+        const userMsg = { role: 'user', content: contentToSend };
         const updatedMessages = [...messages, userMsg];
 
         setMessages(updatedMessages);
@@ -153,18 +160,26 @@ export function ChatInterface({ apiKey, messages, setMessages, setHtmlContent, i
                 <div ref={messagesEndRef} />
             </div>
 
-            <form className="input-area" onSubmit={handleSubmit}>
-                <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Describe your website..."
-                    disabled={isTyping}
-                />
-                <button type="submit" disabled={!input.trim() || isTyping}>
-                    <Send size={18} />
-                </button>
-            </form>
+            <div className="input-wrapper">
+                {selectedElement && (
+                    <div className="selected-element-chip">
+                        <span>Selected: <strong>{selectedElement.tagName}</strong> (Text: {selectedElement.text.substring(0, 20)}...)</span>
+                        <button onClick={() => setSelectedElement(null)}><X size={14} /></button>
+                    </div>
+                )}
+                <form className="input-area" onSubmit={handleSubmit}>
+                    <input
+                        type="text"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder={selectedElement ? "What change do you want for this element?" : "Describe your website..."}
+                        disabled={isTyping}
+                    />
+                    <button type="submit" disabled={!input.trim() || isTyping}>
+                        <Send size={18} />
+                    </button>
+                </form>
+            </div>
         </div>
     );
 }
