@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gusto & Fuoco Pizzeria</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #D32F2F;
+            /* Deep Red */
+            --secondary: #FF9800;
+            /* Warm Orange */
+            --accent: #FFECB3;
+            /* Cream */
+            --dark: #212121;
+            /* Charcoal */
+            --light: #FFFFFF;
+            --text-body: #424242;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            color: var(--text-body);
+            background-color: var(--light);
+            line-height: 1.6;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+            font-family: 'Playfair Display', serif;
+            color: var(--dark);
+        }
+
+        /* Helper Classes */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: var(--primary);
+            color: var(--light);
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn:hover {
+            background-color: #B71C1C;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(211, 47, 47, 0.3);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--light);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--light);
+            color: var(--dark);
+        }
+
+        /* Navbar */
+        nav {
+            background-color: rgba(33, 33, 33, 0.95);
+            padding: 20px 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            color: var(--light);
+            text-decoration: none;
+            font-weight: 400;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--secondary);
+        }
+
+        /* Hero Section */
+        header.hero {
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1541745537411-b8056ebmed3c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: var(--light);
+            padding-top: 80px;
+        }
+
+        .hero-content h1 {
+            font-size: 4rem;
+            color: var(--light);
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .hero-content p {
+            font-size: 1.5rem;
+            margin-bottom: 40px;
+            font-weight: 300;
+        }
+
+        /* Highlights */
+        .features {
+            padding: 80px 0;
+            background-color: var(--accent);
+        }
+
+        .features .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            text-align: center;
+        }
+
+        .feature-item i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        /* Menu Preview */
+        .menu-preview {
+            padding: 80px 0;
+            background-color: var(--light);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 60px;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 3px;
+            background-color: var(--primary);
+            margin: 20px auto 0;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .pizza-card {
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+        }
+
+        .pizza-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .pizza-img {
+            height: 200px;
+            background-color: #eee;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .pizza-info {
+            padding: 25px;
+        }
+
+        .pizza-info h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .pizza-info p {
+            color: #777;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .price {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--dark);
+            color: var(--light);
+            padding: 60px 0 20px;
+            text-align: center;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+            text-align: left;
+        }
+
+        .footer-column h3 {
+            color: var(--accent);
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        .footer-column p,
+        .footer-column a {
+            color: #ccc;
+            margin-bottom: 10px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .copyright {
+            border-top: 1px solid #444;
+            padding-top: 20px;
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <div class="container">
+            <a href="#" class="logo">Gusto & Fuoco</a>
+            <div class="nav-links">
+                <a href="#home">Home</a>
+                <a href="#menu">Menu</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+                <a href="#" style="color: var(--secondary);"><i class="fas fa-phone-alt"></i> Order Now</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero" id="home">
+        <div class="container hero-content">
+            <div>
+                <h1>Authentic Italian Tradition</h1>
+                <p>Wood-fired pizza made with passion and the finest ingredients.</p>
+                <a href="#menu" class="btn">View Our Menu</a>
+                <a href="#contact" class="btn btn-outline" style="margin-left: 15px;">Book a Table</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="features">
+        <div class="container">
+            <div class="feature-item">
+                <i class="fas fa-fire"></i>
+                <h3>Wood Fired</h3>
+                <p>Cooked to perfection in our traditional brick ovens at 800°F.</p>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-leaf"></i>
+                <h3>Fresh Ingredients</h3>
+                <p>Locally sourced vegetables and imported Italian cheeses.</p>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-shipping-fast"></i>
+                <h3>Fast Delivery</h3>
+                <p>Hot and fresh to your doorstep in under 30 minutes.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="menu-preview" id="menu">
+        <div class="container">
+            <h2 class="section-title">Our Favorites</h2>
+            <div class="menu-grid">
+                <!-- Pizza 1 -->
+                <div class="pizza-card">
+                    <div class="pizza-img"
+                        style="background-image: url('https://images.unsplash.com/photo-1574071318508-1cdbab80d002?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60');">
+                    </div>
+                    <div class="pizza-info">
+                        <h3>Margherita Classico</h3>
+                        <p>San Marzano tomato sauce, fresh buffalo mozzarella, basil, extra virgin olive oil.</p>
+                        <div class="price">$14.00</div>
+                    </div>
+                </div>
+                <!-- Pizza 2 -->
+                <div class="pizza-card">
+                    <div class="pizza-img"
+                        style="background-image: url('https://images.unsplash.com/photo-1628840042765-356cda07504e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60');">
+                    </div>
+                    <div class="pizza-info">
+                        <h3>Pepperoni Feast</h3>
+                        <p>Double spicy pepperoni, mozzarella cheese, robust tomato sauce.</p>
+                        <div class="price">$16.50</div>
+                    </div>
+                </div>
+                <!-- Pizza 3 -->
+                <div class="pizza-card">
+                    <div class="pizza-img"
+                        style="background-image: url('https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60');">
+                    </div>
+                    <div class="pizza-info">
+                        <h3>Truffle & Mushroom</h3>
+                        <p>White base, roasted mushrooms, truffle oil, thyme, parmesan.</p>
+                        <div class="price">$18.00</div>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 50px;">
+                <a href="#" class="btn" style="background-color: var(--dark);">See Full Menu</a>
+            </div>
+        </div>
+    </section>
+
+    <footer id="contact">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Gusto & Fuoco</h3>
+                    <p>Authentic Italian Pizzeria serving the heart of the city since 1995.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact</h3>
+                    <p><i class="fas fa-map-marker-alt"></i> 123 Pizza Street, Foodie City</p>
+                    <p><i class="fas fa-phone"></i> (555) 123-4567</p>
+                    <p><i class="fas fa-envelope"></i> hello@gustofucco.com</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Hours</h3>
+                    <p>Mon - Thu: 11am - 10pm</p>
+                    <p>Fri - Sat: 11am - 11pm</p>
+                    <p>Sun: 12pm - 10pm</p>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2024 Gusto & Fuoco Pizzeria. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+</body>
+
+</html>
